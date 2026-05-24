@@ -22,7 +22,7 @@ const PAGE_TITLES = {
   goals: 'Goal Setting', mood: 'Mood Tracker', notes: 'Notes', badges: 'Badges & Rewards', music: 'Focus Music',
 };
 
-export default function Layout({ page, setPage, children }) {
+export default function Layout({ page, setPage, authUser, onLogout, children }) {
   const { state, update, addToast } = useApp();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -88,7 +88,13 @@ export default function Layout({ page, setPage, children }) {
             </div>
             <div style={{display:'flex',alignItems:'center',gap:8}}>
               <span style={{fontSize:13,color:'var(--text-secondary)'}}>🔥 {state.user.streak}</span>
-              <div className="avatar">{state.user.name[0]}</div>
+              <div
+                className="avatar"
+                id="profile-avatar-btn"
+                title="View Profile"
+                onClick={() => setPage('profile')}
+                style={{cursor:'pointer'}}
+              >{authUser ? authUser.avatar : state.user.name[0]}</div>
             </div>
           </div>
         </header>
