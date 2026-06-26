@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 
-export default function ProfilePage({ authUser, onLogout }) {
-  const { state } = useApp();
+export default function ProfilePage({ authUser, onLogout, onUpdateProfile }) {
+  const { state, update, addToast, simulateNextDay, simulateMissedDay } = useApp();
   const [activeTab, setActiveTab] = useState('overview');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ name: authUser.name, email: authUser.email });
 
   const totalTasks = state.tasks.length;
   const doneTasks = state.tasks.filter(t => t.done).length;
@@ -47,18 +49,97 @@ export default function ProfilePage({ authUser, onLogout }) {
 
           {/* Info */}
           <div style={{ flex: 1 }}>
-            <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 26, fontWeight: 800, marginBottom: 4 }}>
-              {authUser.name}
-            </h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 10 }}>
-              📧 {authUser.email} &nbsp;•&nbsp; 📅 Joined {authUser.joined}
-            </p>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <span className="badge badge-purple">⚡ Level {state.user.level}</span>
-              <span className="badge badge-amber">🔥 {state.user.streak} Day Streak</span>
-              <span className="badge badge-cyan">{state.user.xp} XP</span>
-              <span className="badge badge-green">{earnedBadges.length} Badges</span>
-            </div>
+            {isEditing ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 300 }}>
+                <input
+                  type="text"
+                  value={editForm.name}
+                  onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                  style={{
+                    padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-color)',
+                    background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: 14,
+                  }}
+                  placeholder="Full Name"
+                />
+                <input
+                  type="email"
+                  value={editForm.email}
+                  onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+                  style={{
+                    padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-color)',
+                    background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: 14,
+                  }}
+                  placeholder="Gmail Address"
+                />
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={() => {
+                      if (!editForm.name || !editForm.email) {
+                        addToast('Please fill in all fields', 'error');
+                        return;
+                      }
+                      if (!editForm.email.endsWith('@gmail.com')) {
+                        addToast('Email must end with @gmail.com', 'error');
+                        return;
+                      }
+                      onUpdateProfile({ name: editForm.name, email: editForm.email, avatar: editForm.name[0].toUpperCase() });
+                      update({ user: { ...state.user, name: editForm.name } });
+                      addToast('Profile updated!', 'success');
+                      setIsEditing(false);
+                    }}
+                    style={{
+                      padding: '6px 12px', borderRadius: 8, border: 'none',
+                      background: 'linear-gradient(135deg, #7c3aed, #06b6d4)', color: 'white',
+                      fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                    }}
+                  >
+                    💾 Save
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditForm({ name: authUser.name, email: authUser.email });
+                      setIsEditing(false);
+                    }}
+                    style={{
+                      padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border-color)',
+                      background: 'var(--bg-secondary)', color: 'var(--text-secondary)',
+                      fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 26, fontWeight: 800, marginBottom: 0 }}>
+                    {authUser.name}
+                  </h1>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    style={{
+                      background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, padding: 4,
+                      opacity: 0.7, transition: 'opacity 0.2s',
+                    }}
+                    title="Edit Profile"
+                    onMouseEnter={e => e.target.style.opacity = 1}
+                    onMouseLeave={e => e.target.style.opacity = 0.7}
+                  >
+                    ✏️
+                  </button>
+                </div>
+                <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginTop: 4, marginBottom: 10 }}>
+                  📧 {authUser.email} &nbsp;•&nbsp; 📅 Joined {authUser.joined}
+                </p>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <span className="badge badge-purple">⚡ Level {state.user.level}</span>
+                  <span className="badge badge-amber">🔥 {state.user.streak} Day Streak</span>
+                  <span className="badge badge-cyan">{state.user.xp} XP</span>
+                  <span className="badge badge-green">{earnedBadges.length} Badges</span>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Logout */}
@@ -165,7 +246,7 @@ export default function ProfilePage({ authUser, onLogout }) {
             <div className="card">
               <div className="card-title" style={{ marginBottom: 4 }}>Streak & Freezes</div>
               <div className="card-subtitle" style={{ marginBottom: 16 }}>Your study consistency</div>
-              <div style={{ display: 'flex', gap: 16 }}>
+              <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
                 <div style={{ textAlign: 'center', flex: 1, padding: '16px', background: 'rgba(245,158,11,0.08)', borderRadius: 12, border: '1px solid rgba(245,158,11,0.2)' }}>
                   <div style={{ fontSize: 32 }}>🔥</div>
                   <div style={{ fontFamily: 'var(--font-heading)', fontSize: 28, fontWeight: 800 }}>{state.user.streak}</div>
@@ -175,6 +256,40 @@ export default function ProfilePage({ authUser, onLogout }) {
                   <div style={{ fontSize: 32 }}>❄️</div>
                   <div style={{ fontFamily: 'var(--font-heading)', fontSize: 28, fontWeight: 800 }}>{state.streakFreeze}</div>
                   <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Freezes Left</div>
+                </div>
+              </div>
+              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>🧪 Day Simulator</div>
+                    <div style={{ fontSize: 10, color: 'var(--text-secondary)' }}>Simulate day changes to test streak tracking & freezes</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button
+                      onClick={simulateNextDay}
+                      style={{
+                        padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(124,58,237,0.3)',
+                        background: 'rgba(124,58,237,0.08)', color: '#a78bfa',
+                        fontSize: 11, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={e => { e.target.style.background = 'rgba(124,58,237,0.18)'; }}
+                      onMouseLeave={e => { e.target.style.background = 'rgba(124,58,237,0.08)'; }}
+                    >
+                      ⏭️ Next Day
+                    </button>
+                    <button
+                      onClick={simulateMissedDay}
+                      style={{
+                        padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)',
+                        background: 'rgba(239,68,68,0.08)', color: '#f87171',
+                        fontSize: 11, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={e => { e.target.style.background = 'rgba(239,68,68,0.18)'; }}
+                      onMouseLeave={e => { e.target.style.background = 'rgba(239,68,68,0.08)'; }}
+                    >
+                      ⚠️ Miss 1 Day
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

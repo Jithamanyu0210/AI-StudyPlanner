@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import Toast from './Toast';
+import SyncIndicator from './SyncIndicator';
 
 const NAV = [
   { id: 'dashboard', icon: '🏠', label: 'Dashboard', section: 'MAIN' },
@@ -86,7 +87,8 @@ export default function Layout({ page, setPage, authUser, onLogout, children }) 
                 {state.theme === 'dark' ? '☀️' : '🌙'}
               </button>
             </div>
-            <div style={{display:'flex',alignItems:'center',gap:8}}>
+            <div style={{display:'flex',alignItems:'center',gap:12}}>
+              <SyncIndicator />
               <span style={{fontSize:13,color:'var(--text-secondary)'}}>🔥 {state.user.streak}</span>
               <div
                 className="avatar"

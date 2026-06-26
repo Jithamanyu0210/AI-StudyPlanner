@@ -41,14 +41,22 @@ export default function App() {
   });
 
   const handleLogin = (user) => {
+    // token is already stored in localStorage by LoginPage
     localStorage.setItem('studyai_auth', JSON.stringify(user));
     setAuthUser(user);
   };
 
   const handleLogout = () => {
     localStorage.removeItem('studyai_auth');
+    localStorage.removeItem('studyai_token');
     setAuthUser(null);
     setPage('dashboard');
+  };
+
+  const handleUpdateProfile = (updatedDetails) => {
+    const newUser = { ...authUser, ...updatedDetails };
+    localStorage.setItem('studyai_auth', JSON.stringify(newUser));
+    setAuthUser(newUser);
   };
 
   // Show login if not authenticated
@@ -57,10 +65,10 @@ export default function App() {
   }
 
   return (
-    <AppProvider>
+    <AppProvider key={authUser?.email || 'anon'} authUser={authUser}>
       <Layout page={page} setPage={setPage} authUser={authUser} onLogout={handleLogout}>
         {page === 'profile'
-          ? <ProfilePage authUser={authUser} onLogout={handleLogout} />
+          ? <ProfilePage authUser={authUser} onLogout={handleLogout} onUpdateProfile={handleUpdateProfile} />
           : PAGES[page]
         }
       </Layout>
