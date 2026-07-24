@@ -27,6 +27,43 @@ async function request(path, method = 'GET', body = null) {
   return data;
 }
 
+// ── Local User Registry (offline fallback) ────────────────────────────────────
+// Stores accounts as { email -> { name, passwordHash, avatar, joined } }
+const LOCAL_USERS_KEY = 'studyai_local_users';
+
+function getLocalUsers() {
+  try {
+    return JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function saveLocalUsers(users) {
+  localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+}
+
+// Simple deterministic hash (for offline-only use, not cryptographic)
+function simpleHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0;
+  }
+  return hash.toString(36);
+}
+
+function buildUserFromRecord(email, record) {
+  return {
+    id: 'user_' + email,
+    name: record.name,
+    email,
+    avatar: (record.name[0] || 'S').toUpperCase(),
+    joined: record.joined,
+  };
+}
+
 // ── Auth ──────────────────────────────────────────────────────────────────────
 export const authApi = {
   signup: async (name, email, password) => {
@@ -34,17 +71,23 @@ export const authApi = {
     try {
       return await request('/auth/signup', 'POST', { name, email: cleanEmail, password });
     } catch (err) {
-      if (err.message.includes('fetch') || err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('failed')) {
-        console.warn('Backend server unavailable, using local authentication mode.');
-        const mockUser = {
-          id: 'user_' + Date.now(),
+      // Only use local fallback when backend is truly unreachable (network error)
+      const isNetworkError = !err.message || err.message === 'Failed to fetch' || err.name === 'TypeError';
+      if (isNetworkError) {
+        console.warn('Backend unavailable — using local signup mode.');
+        const users = getLocalUsers();
+        if (users[cleanEmail]) {
+          throw new Error('An account with this email already exists. Please sign in instead.');
+        }
+        const record = {
           name,
-          email: cleanEmail,
-          avatar: (name[0] || 'U').toUpperCase(),
+          passwordHash: simpleHash(password),
           joined: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
         };
-        const mockToken = 'local_token_' + Date.now();
-        return { token: mockToken, user: mockUser, isLocal: true };
+        users[cleanEmail] = record;
+        saveLocalUsers(users);
+        const mockToken = 'local_token_' + cleanEmail;
+        return { token: mockToken, user: buildUserFromRecord(cleanEmail, record), isLocal: true };
       }
       throw err;
     }
@@ -55,21 +98,42 @@ export const authApi = {
     try {
       return await request('/auth/login', 'POST', { email: cleanEmail, password });
     } catch (err) {
-      if (err.message.includes('fetch') || err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('failed')) {
-        console.warn('Backend server unavailable, using local authentication mode.');
-        const defaultName = cleanEmail.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        const mockUser = {
-          id: 'user_' + cleanEmail,
-          name: defaultName || 'Student',
-          email: cleanEmail,
-          avatar: (defaultName[0] || 'S').toUpperCase(),
-          joined: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
-        };
+      // Only use local fallback when backend is truly unreachable (network error)
+      const isNetworkError = !err.message || err.message === 'Failed to fetch' || err.name === 'TypeError';
+      if (isNetworkError) {
+        console.warn('Backend unavailable — using local login mode.');
+        const users = getLocalUsers();
+        const record = users[cleanEmail];
+        if (!record) {
+          throw new Error('No account found with this email. Please sign up first.');
+        }
+        if (record.passwordHash !== simpleHash(password)) {
+          throw new Error('Incorrect password. Please try again.');
+        }
         const mockToken = 'local_token_' + cleanEmail;
-        return { token: mockToken, user: mockUser, isLocal: true };
+        return { token: mockToken, user: buildUserFromRecord(cleanEmail, record), isLocal: true };
       }
       throw err;
     }
+  },
+
+  // For demo accounts — creates account if not exists, then logs in
+  demoLogin: async (name, email) => {
+    const cleanEmail = email.trim().toLowerCase();
+    const demoPassword = 'demo12345';
+    const users = getLocalUsers();
+    if (!users[cleanEmail]) {
+      // Auto-register demo account on first use
+      users[cleanEmail] = {
+        name,
+        passwordHash: simpleHash(demoPassword),
+        joined: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+      };
+      saveLocalUsers(users);
+    }
+    const record = users[cleanEmail];
+    const mockToken = 'local_token_' + cleanEmail;
+    return { token: mockToken, user: buildUserFromRecord(cleanEmail, record), isLocal: true };
   },
 };
 
@@ -80,4 +144,3 @@ export const studyApi = {
   saveState: (statePayload) =>
     request('/study/state', 'POST', statePayload),
 };
-
