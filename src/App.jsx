@@ -17,18 +17,22 @@ import Notes from './pages/Notes';
 import Badges from './pages/Badges';
 import FocusMusic from './pages/FocusMusic';
 
-const PAGES = {
-  dashboard: <Dashboard />,
-  planner: <AiPlanner />,
-  schedule: <ScheduleBuilder />,
-  timer: <StudyTimer />,
-  weekend: <WeekendTasks />,
-  progress: <Progress />,
-  goals: <Goals />,
-  mood: <MoodTracker />,
-  notes: <Notes />,
-  badges: <Badges />,
-  music: <FocusMusic />,
+// Render page dynamically
+const renderPage = (pageName, setPage) => {
+  switch (pageName) {
+    case 'dashboard': return <Dashboard setPage={setPage} />;
+    case 'planner':   return <AiPlanner />;
+    case 'schedule':  return <ScheduleBuilder />;
+    case 'timer':     return <StudyTimer />;
+    case 'weekend':   return <WeekendTasks />;
+    case 'progress':  return <Progress />;
+    case 'goals':     return <Goals />;
+    case 'mood':      return <MoodTracker />;
+    case 'notes':     return <Notes />;
+    case 'badges':    return <Badges />;
+    case 'music':     return <FocusMusic />;
+    default:          return <Dashboard setPage={setPage} />;
+  }
 };
 
 export default function App() {
@@ -69,7 +73,7 @@ export default function App() {
       <Layout page={page} setPage={setPage} authUser={authUser} onLogout={handleLogout}>
         {page === 'profile'
           ? <ProfilePage authUser={authUser} onLogout={handleLogout} onUpdateProfile={handleUpdateProfile} />
-          : PAGES[page]
+          : renderPage(page, setPage)
         }
       </Layout>
     </AppProvider>

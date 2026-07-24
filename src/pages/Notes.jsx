@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import SubjectSelect from '../components/SubjectSelect';
 
-const SUBJECTS = ['Mathematics','Physics','Chemistry','Biology','English','History','Computer Science','Economics'];
 const COLORS = { Mathematics:'#7c3aed', Physics:'#06b6d4', Chemistry:'#f59e0b', Biology:'#10b981', English:'#ef4444', History:'#8b5cf6', 'Computer Science':'#0ea5e9', Economics:'#f97316' };
 
 export default function Notes() {
@@ -92,12 +92,10 @@ export default function Notes() {
         <div className="modal-overlay" onClick={() => setShowNew(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-title">📝 New Note</div>
-            <div className="input-group">
-              <label className="input-label">Subject</label>
-              <select className="input" value={newSubject} onChange={e => setNewSubject(e.target.value)}>
-                {SUBJECTS.map(s => <option key={s}>{s}</option>)}
-              </select>
-            </div>
+            <SubjectSelect
+              value={newSubject}
+              onChange={sub => setNewSubject(sub)}
+            />
             <div style={{ display: 'flex', gap: 10 }}>
               <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setShowNew(false)}>Cancel</button>
               <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => {

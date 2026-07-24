@@ -27,15 +27,27 @@ function generatePlan(form) {
 }
 
 export default function AiPlanner() {
-  const { addTask, addToast } = useApp();
+  const { state, addTask, addToast, addSubject } = useApp();
+  const subjects = state.customSubjects || ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Computer Science', 'Economics'];
+  
   const [form, setForm] = useState({ subjects: [], hours: '3', days: '5', difficulty: 'Medium', deadline: '', goal: '' });
   const [plan, setPlan] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [editing, setEditing] = useState(null);
+  const [addingCustom, setAddingCustom] = useState(false);
+  const [customInput, setCustomInput] = useState('');
 
   const toggle = (sub) => setForm(f => ({
     ...f, subjects: f.subjects.includes(sub) ? f.subjects.filter(s => s !== sub) : [...f.subjects, sub]
   }));
+
+  const handleAddCustom = (e) => {
+    e.preventDefault();
+    if (!customInput.trim()) return;
+    const added = addSubject(customInput.trim());
+    toggle(customInput.trim());
+    setCustomInput('');
+    setAddingCustom(false);
+  };
 
   const generate = () => {
     if (!form.subjects.length) { addToast('Select at least one subject', 'error'); return; }
@@ -64,9 +76,28 @@ export default function AiPlanner() {
           <div className="input-group">
             <label className="input-label">Select Subjects</label>
             <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
-              {SUBJECTS.map(s => (
+              {subjects.map(s => (
                 <div key={s} className={`chip ${form.subjects.includes(s)?'selected':''}`} onClick={() => toggle(s)}>{s}</div>
               ))}
+              {!addingCustom ? (
+                <div className="chip" style={{ borderStyle: 'dashed', background: 'transparent' }} onClick={() => setAddingCustom(true)}>
+                  ➕ Add Subject
+                </div>
+              ) : (
+                <form onSubmit={handleAddCustom} style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="Subject name..."
+                    value={customInput}
+                    onChange={e => setCustomInput(e.target.value)}
+                    autoFocus
+                    style={{ padding: '4px 10px', fontSize: 13, width: 140 }}
+                  />
+                  <button type="submit" className="btn btn-primary btn-sm" style={{ padding: '4px 8px', fontSize: 12 }}>Save</button>
+                  <button type="button" className="btn btn-secondary btn-sm" style={{ padding: '4px 8px', fontSize: 12 }} onClick={() => setAddingCustom(false)}>×</button>
+                </form>
+              )}
             </div>
           </div>
 

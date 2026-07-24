@@ -7,6 +7,10 @@ export default function ProfilePage({ authUser, onLogout, onUpdateProfile }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ name: authUser.name, email: authUser.email });
 
+  // Always use live state values so edits reflect instantly
+  const displayName   = state.user.name  || authUser.name;
+  const displayAvatar = displayName[0]?.toUpperCase() || authUser.avatar;
+
   const totalTasks = state.tasks.length;
   const doneTasks = state.tasks.filter(t => t.done).length;
   const completionRate = totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0;
@@ -44,7 +48,7 @@ export default function ProfilePage({ authUser, onLogout, onUpdateProfile }) {
             boxShadow: '0 8px 30px rgba(124,58,237,0.4)',
             flexShrink: 0,
           }}>
-            {authUser.avatar}
+            {displayAvatar}
           </div>
 
           {/* Info */}
@@ -114,7 +118,7 @@ export default function ProfilePage({ authUser, onLogout, onUpdateProfile }) {
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 26, fontWeight: 800, marginBottom: 0 }}>
-                    {authUser.name}
+                    {displayName}
                   </h1>
                   <button
                     onClick={() => setIsEditing(true)}

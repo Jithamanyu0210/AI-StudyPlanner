@@ -82,6 +82,10 @@ const UserSchema = new mongoose.Schema({
   studyMinutes: { type: Number, default: 0 },
   
   // Study State details
+  customSubjects: {
+    type: [String],
+    default: ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Computer Science', 'Economics']
+  },
   tasks: { type: [TaskSchema], default: [] },
   schedule: { type: [ScheduleSchema], default: [] },
   goals: { type: [GoalSchema], default: [] },

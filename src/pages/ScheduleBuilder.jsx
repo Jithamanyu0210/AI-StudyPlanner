@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import SubjectSelect from '../components/SubjectSelect';
 
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const COLORS = ['#7c3aed','#06b6d4','#f59e0b','#10b981','#ef4444','#8b5cf6','#f97316','#0ea5e9'];
-const SUBJECTS = ['Mathematics','Physics','Chemistry','Biology','English','History','Computer Science','Economics'];
 
 export default function ScheduleBuilder() {
   const { state, update, addToast } = useApp();
@@ -99,12 +99,10 @@ export default function ScheduleBuilder() {
         <div className="modal-overlay" onClick={()=>setShowModal(false)}>
           <div className="modal" onClick={e=>e.stopPropagation()}>
             <div className="modal-title">➕ Add Study Session</div>
-            <div className="input-group">
-              <label className="input-label">Subject</label>
-              <select className="input" value={form.subject} onChange={e=>setForm(f=>({...f,subject:e.target.value}))}>
-                {SUBJECTS.map(s=><option key={s}>{s}</option>)}
-              </select>
-            </div>
+            <SubjectSelect
+              value={form.subject}
+              onChange={sub => setForm(f => ({ ...f, subject: sub }))}
+            />
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
               <div className="input-group">
                 <label className="input-label">Day</label>

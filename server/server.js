@@ -138,6 +138,7 @@ app.get('/api/study/state', auth, async (req, res) => {
         lastStudyDate: user.lastStudyDate,
         lastActiveDate: user.lastActiveDate
       },
+      customSubjects: user.customSubjects || ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Computer Science', 'Economics'],
       tasks: user.tasks,
       schedule: user.schedule,
       goals: user.goals,
@@ -156,7 +157,7 @@ app.get('/api/study/state', auth, async (req, res) => {
 
 // 4. Save/Update study state (Sync)
 app.post('/api/study/state', auth, async (req, res) => {
-  const { theme, user: userStats, tasks, schedule, goals, notes, moodLog, pomodoroSessions, studyMinutes, badges, weekendTasks, streakFreeze } = req.body;
+  const { theme, user: userStats, customSubjects, tasks, schedule, goals, notes, moodLog, pomodoroSessions, studyMinutes, badges, weekendTasks, streakFreeze } = req.body;
   
   try {
     const user = await User.findById(req.user.id);
@@ -177,6 +178,7 @@ app.post('/api/study/state', auth, async (req, res) => {
     if (streakFreeze !== undefined) user.streakFreeze = streakFreeze;
     if (pomodoroSessions !== undefined) user.pomodoroSessions = pomodoroSessions;
     if (studyMinutes !== undefined) user.studyMinutes = studyMinutes;
+    if (customSubjects !== undefined) user.customSubjects = customSubjects;
     
     if (tasks !== undefined) user.tasks = tasks;
     if (schedule !== undefined) user.schedule = schedule;

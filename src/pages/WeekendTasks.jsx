@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import SubjectSelect from '../components/SubjectSelect';
 
 export default function WeekendTasks() {
   const { state, addWeekendTask, toggleWeekendTask, addToast, update } = useApp();
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ title: '', subject: 'Mathematics', priority: 'medium' });
 
-  const SUBJECTS = ['Mathematics','Physics','Chemistry','Biology','English','History','Computer Science','Economics'];
   const done = state.weekendTasks.filter(t => t.done).length;
   const total = state.weekendTasks.length;
 
@@ -120,12 +120,10 @@ export default function WeekendTasks() {
               <label className="input-label">Task Title</label>
               <input className="input" placeholder="e.g. Solve 20 MCQs..." value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
             </div>
-            <div className="input-group">
-              <label className="input-label">Subject</label>
-              <select className="input" value={form.subject} onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}>
-                {SUBJECTS.map(s => <option key={s}>{s}</option>)}
-              </select>
-            </div>
+            <SubjectSelect
+              value={form.subject}
+              onChange={sub => setForm(f => ({ ...f, subject: sub }))}
+            />
             <div className="input-group">
               <label className="input-label">Priority</label>
               <select className="input" value={form.priority} onChange={e => setForm(f => ({ ...f, priority: e.target.value }))}>
